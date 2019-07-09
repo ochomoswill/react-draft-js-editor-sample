@@ -1,0 +1,33 @@
+/*.editors{
+	border: 1px solid #ddd;
+	font-size: 14px;
+	padding: 15px;
+	background: #fff;
+}*/
+
+
+.editors {
+	box-sizing: border-box;
+	border: 1px solid #ddd;
+	cursor: text;
+	padding: 16px;
+	border-radius: 2px;
+	margin-bottom: 2em;
+	box-shadow: inset 0px 1px 8px -3px #ABABAB;
+	background: #fefefe;
+}
+
+.editors :global(.public-DraftEditor-content) {
+	min-height: 140px;
+}
+
+.options {
+	margin-bottom: 20px;
+}
+
+
+.editorButtons{
+	padding-bottom: 20px;
+	border-bottom: 1px solid #ddd;
+	margin-bottom: 20px;
+}

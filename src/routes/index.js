@@ -1,11 +1,9 @@
 import React, {Component} from 'react';
 import {Layout, Menu} from "antd"
 
-import {Link, Route, Switch} from "react-router-dom";
+import {Link, Route, Switch, Redirect} from "react-router-dom";
 
-import Posts from './Posts'
-import Gallery from './Gallery'
-import Tasks from './Tasks'
+import Editor from './Editor'
 
 class Index extends Component {
 
@@ -30,27 +28,14 @@ class Index extends Component {
                         mode="horizontal"
                         style={{lineHeight: '64px'}}
                     >
-                        <Menu.Item key="feeds">
-							<Link to="/feeds">Posts</Link>
-                        </Menu.Item>
-                        <Menu.Item key="gallery">
-							<Link to="/gallery">Gallery</Link>
-                        </Menu.Item>
-						<Menu.Item key="tasks">
-							<Link to="/tasks">Tasks</Link>
+						<Menu.Item key="editor">
+							<Link to="/editor">Editor</Link>
 						</Menu.Item>
-                        {/*<Menu.Item key="users">
-							<Link to="/users">Users</Link>
-
-                        </Menu.Item>*/}
                     </Menu>
                 </Header>
                 <Content style={{padding: '0 50px'}}>
 					<Switch>
-						<Route path={`${match.url}feeds`} breadcrumbName="Posts" component={Posts}/>
-						<Route path={`${match.url}gallery`} breadcrumbName="Gallery" component={Gallery}/>
-						<Route path={`${match.url}tasks`} breadcrumbName="Tasks" component={Tasks}/>
-						{/*<Route path={`${match.url}users`} breadcrumbName="Users" component={Users}/>*/}
+						<Route path={`${match.url}editor`} breadcrumbName="Editor" component={Editor}/>
 					</Switch>
                 </Content>
                 <Footer style={{textAlign: 'center'}}>
