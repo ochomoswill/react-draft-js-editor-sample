@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import {Layout, Menu} from "antd"
 
-import {Link, Route, Switch, Redirect} from "react-router-dom";
+import {Link, Route, Switch} from "react-router-dom";
 
 import Editor from './Editor'
 

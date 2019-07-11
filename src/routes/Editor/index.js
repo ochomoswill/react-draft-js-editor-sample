@@ -1,11 +1,8 @@
 import React, {Component} from 'react';
-import {connect} from 'react-redux'
-import {bindActionCreators} from 'redux'
-import {Row, Col, PageHeader, Switch, Table, Menu, Dropdown, Icon} from "antd"
+import {Row, Col, PageHeader, Menu, Dropdown, Icon} from "antd"
 
-import {withRouter} from "react-router-dom";
-import Editor, {composeDecorators} from 'draft-js-plugins-editor';
-import {EditorState, RichUtils, convertFromRaw, convertToRaw, Modifier} from 'draft-js';
+import Editor from 'draft-js-plugins-editor';
+import {EditorState, ContentState, RichUtils, convertToRaw, Modifier} from 'draft-js';
 
 //import "../../../node_modules/draft-js/dist/Draft.css"
 import createFocusPlugin from 'draft-js-focus-plugin';
@@ -56,8 +53,15 @@ class EditorPage extends Component {
 					" the rate of change enabled by the Mobile, Internet and globalization. We are a leading provider of CSP " +
 					"technology while offering customer oriented and unique services that enable their competitive advantage."
 			},
+			content: "Sky World Limited is an innovative IT service provider company engaging its customer with " +
+				"hosted online applications and content. We recognize the organic nature of IT systems and the increase in" +
+				" the rate of change enabled by the Mobile, Internet and globalization. We are a leading provider of CSP " +
+				"technology while offering customer oriented and unique services that enable their competitive advantage.",
 			displayedNote: 1,
 			visible: false,
+			charsTyped: 0,
+			messageCount: 0,
+			remainingChars:0
 		};
 	}
 
@@ -132,55 +136,52 @@ class EditorPage extends Component {
 	};*/
 
 	componentDidMount() {
-		if (this.state.note === null) {
+		/*if (this.state.note === null) {
 			this.setState({
 				displayedNote: "new",
-				editorState: EditorState.createEmpty()
+				editorState: EditorState.createEmpty(),
 			})
 		} else {
 			this.setState({
 				displayedNote: this.state.note.id,
 				editorState:
-					EditorState.createWithContent(convertFromRaw(this.buildEditorContent(this.state.note.content)))
-			})
-		}
+					EditorState.createWithContent(convertFromRaw(this.buildEditorContent(this.state.note.content))),
+				charsTyped: this.getLengthOfText(),
+				messageCount: this.getMessageCount(),
+			});
+
+			this.handleCharacterCount();
+		}*/
+
+		this.setState({
+			displayedNote: this.state.note.id,
+			editorState:EditorState.createWithContent(ContentState.createFromText(this.state.content)),
+			charsTyped: this.getLengthOfText(),
+			messageCount: this.getMessageCount(),
+			remainingChars: this.getRemainingCharsCount()
+		});
 	}
 
 	componentDidUpdate(prevProps, prevState) {
-		if (prevProps.note == null && !this.state.note) {
+		if(prevState.editorState !== this.state.editorState){
+			this.setState({
+				charsTyped: this.getLengthOfText(),
+				messageCount: this.getMessageCount(),
+				remainingChars: this.getRemainingCharsCount()
+				//messageCount:
+
+			});
+		}
+		/*if (prevProps.note == null && !this.state.note) {
 			this.setState({
 				displayedNote: this.state.note.id,
-				editorState: EditorState.createWithContent(convertFromRaw(this.buildEditorContent(this.state.note.content)))
+				editorState:EditorState.createWithContent(ContentState.createFromText(this.state.content)),
+				//charsTyped: this.getLengthOfText(),
+				//messageCount:
+
 			})
-		}
+		}*/
 	}
-
-	submitEditor = () => {
-		let contentState = this.state.editorState.getCurrentContent();
-		if (this.state.displayedNote === "new") {
-			let note = {content: convertToRaw(contentState)};
-			console.log("Here is the note ", note);
-			note["content"] = JSON.stringify(note.content);
-		} else {
-			let note = {content: convertToRaw(contentState)};
-			note["content"] = JSON.stringify(note.content);
-			console.log("Here is the updated note ", note);
-		}
-	};
-
-	buildEditorContent = (text) => {
-		return {
-			"blocks": [{
-				"key": "bnei5",
-				"text": text,
-				"type": "unstyled",
-				"depth": 0,
-				"inlineStyleRanges": [],
-				"entityRanges": [],
-				"data": {}
-			}], "entityMap": {}
-		};
-	};
 
 	insert = (text) => {
 		const {editorState} = this.state;
@@ -188,40 +189,119 @@ class EditorPage extends Component {
 		const selectionState = editorState.getSelection();
 		const contentStateWithEntity = contentState.createEntity('MY_ENTITY_TYPE', 'IMMUTABLE');
 		const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
-		contentState = Modifier.insertText(contentState, selectionState, ' ');
-		contentState = Modifier.insertText(
-			contentState,
-			selectionState,
-			text,
-			['BOLD', 'HIGHLIGHT'],
-			entityKey
-		);
 
-		let newState = EditorState.push(
-			editorState,
-			contentState,
-			'insert-characters'
-		);
+		// Check if there is no selected text
+		if(this.getLengthOfSelectedText() === 0){
+			contentState = Modifier.insertText(contentState, selectionState, ' ');
+			contentState = Modifier.insertText(
+				contentState,
+				selectionState,
+				text,
+				['BOLD', 'HIGHLIGHT'],
+				entityKey
+			);
 
-		if (!newState.getCurrentContent().equals(editorState.getCurrentContent())) {
-			const sel = newState.getSelection();
-			const updatedSelection = sel.merge({
-				anchorOffset: sel.getAnchorOffset() + 1,
-				focusOffset: sel.getAnchorOffset() + 1
-			});
-			// Forcing the current selection ensures that it will be at it's right place.
-			newState = EditorState.forceSelection(
-				newState,
-				updatedSelection,
-			)
+			let newState = EditorState.push(
+				editorState,
+				contentState,
+				'insert-characters'
+			);
+
+			if (!newState.getCurrentContent().equals(editorState.getCurrentContent())) {
+				const sel = newState.getSelection();
+				const updatedSelection = sel.merge({
+					anchorOffset: sel.getAnchorOffset() + 1,
+					focusOffset: sel.getAnchorOffset() + 1
+				});
+				// Forcing the current selection ensures that it will be at it's right place.
+				newState = EditorState.forceSelection(
+					newState,
+					updatedSelection,
+				)
+			}
+			this.setState({editorState: newState})
 		}
-		this.setState({editorState: newState})
+	};
+
+	getLengthOfText = () => {
+		const contentState = this.state.editorState.getCurrentContent();
+		return contentState.getPlainText().length
+	};
+
+	getMessageCount = () => {
+		let messages = 0;
+
+		let count = this.getLengthOfText();
+
+		if(count > 0){
+			messages = Math.ceil(count / 160);
+		}
+		return messages;
+	};
+
+	getRemainingCharsCount = () => {
+		const charCount = this.getLengthOfText();
+		const messages = this.getMessageCount();
+		let	remaining = 0;
+		if(messages <= 1){
+			remaining = messages * 160 - (charCount % (messages * 160) || messages * 160);
+		}else{
+			remaining = (((messages-1) * 160) + 160) - (charCount % (messages * 160) || messages * 160);
+		}
+
+		return remaining
 	};
 
 
+	getLengthOfSelectedText = () => {
+		const currentSelection = this.state.editorState.getSelection();
+		const isCollapsed = currentSelection.isCollapsed();
+
+		let length = 0;
+
+		if (!isCollapsed) {
+			const currentContent = this.state.editorState.getCurrentContent();
+			const startKey = currentSelection.getStartKey();
+			const endKey = currentSelection.getEndKey();
+			const startBlock = currentContent.getBlockForKey(startKey);
+			const isStartAndEndBlockAreTheSame = startKey === endKey;
+			const startBlockTextLength = startBlock.getLength();
+			const startSelectedTextLength = startBlockTextLength - currentSelection.getStartOffset();
+			const endSelectedTextLength = currentSelection.getEndOffset();
+			const keyAfterEnd = currentContent.getKeyAfter(endKey);
+			console.log(currentSelection)
+			if (isStartAndEndBlockAreTheSame) {
+				length += currentSelection.getEndOffset() - currentSelection.getStartOffset();
+			} else {
+				let currentKey = startKey;
+
+				while (currentKey && currentKey !== keyAfterEnd) {
+					if (currentKey === startKey) {
+						length += startSelectedTextLength + 1;
+					} else if (currentKey === endKey) {
+						length += endSelectedTextLength;
+					} else {
+						length += currentContent.getBlockForKey(currentKey).getLength() + 1;
+					}
+
+					currentKey = currentContent.getKeyAfter(currentKey);
+				};
+			}
+		}
+
+		return length;
+	};
+
+	submitEditor = () => {
+		const contentState = this.state.editorState.getCurrentContent();
+		let message = {content: convertToRaw(contentState)};
+		message["content"] = JSON.stringify(message.content);
+		console.log("Here is the message ", message);
+	};
+
 	render() {
 
-
+		console.log("Here are the selected text ", this.getLengthOfSelectedText());
 		return (
 			<React.Fragment>
 				<PageHeader
@@ -275,7 +355,15 @@ class EditorPage extends Component {
 										plugins={plugins}
 									/>
 
-									<CharCounter editorState={this.state.editorState} limit={200}/> characters
+									<p>
+										<CharCounter editorState={this.state.editorState} limit={200}/> characters
+									</p>
+
+									<p>
+										{this.state.remainingChars} characters remaining, {this.state.messageCount} messages
+									</p>
+
+
 								</div>
 							</div>
 							<button onClick={this.submitEditor}>Submit Data</button>
